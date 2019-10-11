@@ -1,32 +1,95 @@
-# Prerequisites
-*.d
+## Mac OSX
+##---------
+.DS_Store
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+## Python
+##--------
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
+## Fortran module
+##----------------
 *.mod
 *.smod
 
-# Compiled Static libraries
-*.lai
-*.la
+## C++
+##-----
+## Prerequisites
+*.d
+
+## Precompiled Headers
+*.gch
+*.pch
+
+## Object files
+*.ko
+*.elf
+*.lo
+*.o
+*.obj
+*.slo
+
+## Static Libraries
 *.a
+*.la
+*.lai
 *.lib
 
-# Executables
+## Shared objects (Dynamic libraries)
+*.dll
+*.dylib
+*.so
+*.so.*
+
+## Executables
+*.app
 *.exe
 *.out
-*.app
+
+## Debug files
+*.dSYM/
+*.su
+
+## LaTeX
+##-------
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+## Intermediate documents:
+*.dvi
+*.xdv
+*-converted-to.*
+# these rules might exclude image files for figures etc.
+# *.ps
+# *.eps
+# *.pdf
+
+## Generated if empty string is given at "Please type another file name for output:"
+.pdf
+
+## Bibliography auxiliary files (bibtex/biblatex/biber):
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+
+## Build tool auxiliary files:
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync

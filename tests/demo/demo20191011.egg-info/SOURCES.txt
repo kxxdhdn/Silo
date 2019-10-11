@@ -1,0 +1,8 @@
+setup.py
+demo20191011.egg-info/PKG-INFO
+demo20191011.egg-info/SOURCES.txt
+demo20191011.egg-info/dependency_links.txt
+demo20191011.egg-info/entry_points.txt
+demo20191011.egg-info/requires.txt
+demo20191011.egg-info/top_level.txt
+src/__init__.py
