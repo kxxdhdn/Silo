@@ -1,31 +1,40 @@
 from setuptools import setup
 
 setup(
-    name = 'astools',
-    version = '0.1',
+    name = 'astylo',
+    version = '0.2',
     author = 'D. HU',
     author_email = 'dangning.hu@cea.fr',
-    description = 'Python tool kit for astro uses.',
+    description = 'Python tool kit based on astropy, etc.',
     license = 'BSD',
     keywords = 'astronomy astrophysics',
-    url = 'https://github.com/kxxdhdn/Silo',
+    url = 'https://github.com/kxxdhdn/astylo',
 
     python_requires='>=3.6',
-    install_requires = ['h5py', 'reproject', ],
+    install_requires = [
+        'numpy', 'scipy', 'matplotlib', 
+        'astropy', 'reproject', 'h5py', 'tqdm', 
+    ],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: BSD License',
-        'Operating System :: MacOS',
+        'Operating System :: OS Independent',
     ],
     
     ## Plugins
     entry_points={
         # Installation test with command line
         'console_scripts': [
-            'astools_landing = astools:iTest',
+            'astyloading = astylo:iTest',
         ],
     },
 
     ## Packages
-    packages = ['astools'],
+    packages = ['astylo'],
+
+    ## Package data
+    package_data = {
+        # include *.txt files in astylo/data
+        'astylo': ['dat/*.txt'],
+    },
 )
