@@ -5,7 +5,9 @@
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0.2 (20200413)
+Version: v0.2.1 (20200417)
+Auto version control not yet available. 
+Check ~setup.py~ and astylo/ ~__init_.py~
 * DONE alib (Astro library) [8/8]
 ** DONE pix2sr
 CLOSED: [2020-03-31 Tue 15:05]
@@ -17,14 +19,14 @@ CLOSED: [2020-03-31 Tue 15:05]
 CLOSED: [2020-03-31 Tue 15:05]
 ** DONE deg2hour
 CLOSED: [2020-03-31 Tue 15:05]
-** FIXED get_cd
+** FIXED ~get_cd~
 CLOSED: [2020-04-06 Mon 10:06]
 - State "FIXED"      from "BUG"        [2020-04-06 Mon 10:06]
 - Note taken on [2020-04-01 Wed 15:31] \\
   ValueError: cannot reshape array of size 3 into shape (2,1)
-  cl.cdelt can have 3 elements if input header is 3d (idem for get_pc)
+  cl.cdelt can have 3 elements if input header is 3d (idem for ~get_pc~)
 - State "BUG"        from "DONE"       [2020-04-01 Wed 10:51]
-** FIXED get_pc
+** FIXED ~get_pc~
 CLOSED: [2020-04-06 Mon 10:06]
 - State "FIXED"      from "BUG"        [2020-04-06 Mon 10:06]
 - State "BUG"        from "DONE"       [2020-04-01 Wed 10:51]
@@ -33,22 +35,26 @@ CLOSED: [2020-03-31 Tue 15:05]
 * TODO iolib (Input/output library) [8/9]
 ** DONE fclean
 CLOSED: [2020-03-31 Tue 15:05]
-** DONE read_fits
+** DONE ~read_fits~
 CLOSED: [2020-03-31 Tue 15:05]
-** DONE write_fits
+** DONE ~write_fits~
 CLOSED: [2020-03-31 Tue 15:05]
-** DONE read_hdf5
-CLOSED: [2020-03-31 Tue 15:05]
-** FIXED write_hdf5
+** FIXED ~read_hdf5~
+CLOSED: [2020-04-17 Fri 17:09]
+- State "FIXED"      from "REPORT"     [2020-04-17 Fri 17:09]
+- Note taken on [2020-04-16 Thu 12:38] \\
+  Unknown flib related issue via Fred
+- State "REPORT"     from "DONE"       [2020-04-16 Thu 12:38]
+** FIXED ~write_hdf5~
 CLOSED: [2020-04-06 Mon 18:23]
 - State "FIXED"      from "KNOWNCAUSE" [2020-04-06 Mon 18:23]
 - Note taken on [2020-04-06 Mon 14:46] \\
   Better to embed h5py string encoding issue
 - State "KNOWNCAUSE" from "DONE"       [2020-04-06 Mon 14:46]
-** DONE read_ascii
+** DONE ~read_ascii~
 CLOSED: [2020-03-31 Tue 15:05]
-** TODO write_ascii
-** FIXED read_csv
+** TODO ~write_ascii~
+** FIXED ~read_csv~
 CLOSED: [2020-04-06 Mon 19:29]
 - Note taken on [2020-04-06 Mon 19:29] \\
   Need to reset pointer in the loop
@@ -59,11 +65,11 @@ CLOSED: [2020-04-06 Mon 19:29]
 ** DONE write_csv
 CLOSED: [2020-03-31 Tue 15:05]
 * WAIT mlib (Math library) [11/12]
-** DONE f_lin
+** DONE ~f_lin~
 CLOSED: [2020-03-31 Tue 15:05]
-** DONE f_lin1
+** DONE ~f_lin1~
 CLOSED: [2020-03-31 Tue 15:05]
-** DONE f_lin0
+** DONE ~f_lin0~
 CLOSED: [2020-03-31 Tue 15:05]
 ** DONE gaussian
 CLOSED: [2020-03-31 Tue 15:05]
@@ -94,15 +100,15 @@ CLOSED: [2020-03-31 Tue 15:05]
 ** DONE plotool [100%]
 *** DONE figure
 CLOSED: [2020-03-31 Tue 15:07]
-*** DONE set_border
+*** DONE ~set_border~
 CLOSED: [2020-03-31 Tue 15:07]
 *** DONE Cartesian2d
 CLOSED: [2020-03-31 Tue 15:07]
-*** DONE set_ax
+*** DONE ~set_ax~
 CLOSED: [2020-03-31 Tue 15:07]
 *** DONE plot
 CLOSED: [2020-03-31 Tue 15:07]
-*** DONE set_font
+*** DONE ~set_font~
 CLOSED: [2020-03-31 Tue 15:07]
 *** DONE fill
 CLOSED: [2020-03-31 Tue 15:07]
@@ -114,35 +120,42 @@ CLOSED: [2020-03-31 Tue 15:07]
 CLOSED: [2020-03-31 Tue 15:07]
 ** DONE plot2d
 CLOSED: [2020-03-31 Tue 15:07]
-** DONE plot2d_m
+** DONE ~plot2d_m~
 CLOSED: [2020-03-31 Tue 15:07]
-* WAIT calib (Calibration library) [2/5]
+* TODO calib (Calibration library) [1/5]
 Dependencies: alib, iolib, plib
 ** TODO specorrect
-** DONE intercalib [100%]
-*** FIXED synthetic_photometry
-CLOSED: [2020-04-13 Mon 13:41]
+** WAIT intercalib [0%]
+*** KNOWNCAUSE ~synthetic_photometry~
+- Note taken on [2020-04-17 Fri 18:35] \\
+  For extrapolation off (extrapoff) option, we can simply set zeros for the uncovered beginning of the spectrum, and this step can avoid important bias given by the extrapolation. While for the end of spectrum, it is not right to set zeros considering the non-negligible continuum, etc. although the total flux can be less. (Spectra in the context of mid-IR range.)
+- State "KNOWNCAUSE" from "FIXED"      [2020-04-17 Fri 18:35]
 - Note taken on [2020-04-13 Mon 13:41] \\
   i/o.h5 must be in cwd (removed tmpdir)
 - State "FIXED"      from "BUG"        [2020-04-13 Mon 13:41]
 - Note taken on [2020-04-13 Mon 12:09] \\
-  When tmpdir is not default (cwd), synthetic_photometry cannot find input.h5
+  When tmpdir is not default (cwd), ~synthetic_photometry~ cannot find input.h5
 - State "BUG"        from "DONE"       [2020-04-13 Mon 12:09]
 ** WAIT spec2phot
 ** WAIT phot2phot
-** DONE photometry_profile
+** DONE ~photometry_profile~
 CLOSED: [2020-03-31 Tue 16:13]
-* TODO ipro (Image processing) [12/13]
+* WAIT ipro (Image processing) [12/13]
 Dependencies: alib, iolib, mlib
+- Note taken on [2020-04-17 Fri 11:49] \\
+  Add ~raise Error~
 ** DONE improve [100%]
-*** DONE rand_norm
+*** DONE ~rand_norm~
 CLOSED: [2020-03-31 Tue 16:11]
-*** DONE rand_splitnorm
+*** DONE ~rand_splitnorm~
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE slice
 CLOSED: [2020-03-31 Tue 16:11]
-*** DONE slice_inv_sqrt
+*** FIXED ~slice_inv_sq~
 CLOSED: [2020-03-31 Tue 16:11]
+- Note taken on [2020-04-14 Tue 12:52] \\
+  Correct sq from sqrt (not square root but squre!)
+- State "FIXED"      from "DONE"       [2020-04-14 Tue 12:52]
 *** FIXED crop
 CLOSED: [2020-04-13 Mon 17:39]
 - State "FIXED"      from "KNOWNCAUSE" [2020-04-13 Mon 17:39]
@@ -160,7 +173,7 @@ CLOSED: [2020-03-31 Tue 16:11]
 *** image
 *** wave
 ** DONE imontage (improve) [obsolete, see iswarp] [100%]
-*** DONE make_header
+*** DONE ~make_header~
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE make
 CLOSED: [2020-03-31 Tue 16:11]
@@ -168,13 +181,18 @@ CLOSED: [2020-03-31 Tue 16:11]
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE reproject
 CLOSED: [2020-03-31 Tue 16:11]
-*** DONE reproject_mc
+*** DONE ~reproject_mc~
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE combine
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE clean
 CLOSED: [2020-03-31 Tue 16:11]
-** DONE iswarp (improve) [100%]
+** FIXED iswarp (improve) [100%]
+CLOSED: [2020-04-14 Tue 15:57]
+- State "FIXED"      from "KNOWNCAUSE" [2020-04-14 Tue 15:57]
+- Note taken on [2020-04-14 Tue 10:16] \\
+  Non-north (non-diag CD matrix) reprojection extension
+- State "KNOWNCAUSE" from "DONE"       [2020-04-14 Tue 10:16]
 *** DONE footprint
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE combine
@@ -182,11 +200,11 @@ CLOSED: [2020-03-31 Tue 16:11]
 *** DONE clean
 CLOSED: [2020-03-31 Tue 16:11]
 ** DONE iconvolve (improve) [100%]
-*** DONE spitzer_irs
+*** DONE ~spitzer_irs~
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE choker
 CLOSED: [2020-03-31 Tue 16:11]
-*** DONE do_conv
+*** DONE ~do_conv~
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE image
 CLOSED: [2020-03-31 Tue 16:11]
@@ -195,11 +213,11 @@ CLOSED: [2020-03-31 Tue 16:11]
 *** DONE filenames
 CLOSED: [2020-03-31 Tue 16:11]
 ** DONE sextract (improve) [100%]
-*** DONE rand_pointing
+*** DONE ~rand_pointing~
 CLOSED: [2020-03-31 Tue 16:11]
-*** DONE spec_build
+*** DONE ~spec_build~
 CLOSED: [2020-03-31 Tue 16:11]
-*** CNCL sav_build
+*** CNCL ~sav_build~
 CLOSED: [2020-03-31 Tue 16:12]
 - State "CNCL"       from "WAIT"       [2020-03-31 Tue 16:12] \\
   Time consuming

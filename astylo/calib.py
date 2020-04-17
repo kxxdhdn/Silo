@@ -84,7 +84,7 @@ class intercalib:
             self.wvl = ds.wave
 
     def synthetic_photometry(self, filt, w_spec=None, Fnu_spec=None, \
-                             extrapolate=True, verbose=False):
+                             extrapoff=True, verbose=False):
         '''
         External Fortran library (SwING) needed
 
@@ -92,7 +92,7 @@ class intercalib:
         filt                photometry names (string, tuple or list)
         w_spec              wavelengths (Default: None - via filIN)
         Fnu_spec            spectra (Default: None - via filIN)
-        extrapolate         auto-cover the whole grid (Default: True)
+        extrapoff           set zeros for uncovered wave grid (Default: True)
         verbose             keep tmp files (Default: False)
         ------ OUTPUT ------
         ds                  output dataset
@@ -121,9 +121,9 @@ class intercalib:
         else:
             dim = 3
 
-        ## Extrapolate the grid that is not covered
-        ##------------------------------------------
-        if extrapolate==True:
+        ## Do not extrapolate the wave grid that is not covered by input spectra
+        ##-----------------------------------------------------------------------
+        if extrapoff==True:
             for phot in filt:
                 w_grid = read_ascii(aroot+'/dat/'+phot)[:,0]
                 w_grid = [float(n) for n in w_grid]
@@ -279,7 +279,7 @@ def photometry_profile(datdir=None, *photometry):
     lam = []
     val = []
     for phot in photometry:
-        if datdir==None:
+        if datdir is None:
             datdir = aroot+'/dat/'
         dat = read_ascii(datdir+phot, dtype=float)
         lam.append(dat[:,0])

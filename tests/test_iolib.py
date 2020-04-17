@@ -71,8 +71,7 @@ get_cdata = read_csv(outdir+'test_iolib', 'Spectral Response', 'Wave')
 print('Spectral Response \n', get_cdata[0]) # changed list order here
 print('Wave \n', get_cdata[1])
 
-m = input('Test fclean ? (y/n)')
-if m=='y':
+if input('Test fclean (y/n): ')=='y':
     print('\n TEST fclean ')
     print('-------------')
     info = './out is empty! [Done]'

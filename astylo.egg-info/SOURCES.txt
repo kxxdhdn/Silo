@@ -1,4 +1,3 @@
-README.md
 setup.py
 astylo/__init__.py
 astylo/alib.py

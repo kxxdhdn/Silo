@@ -2,13 +2,18 @@ from setuptools import setup
 
 setup(
     name = 'astylo',
-    version = '0.2',
+    version = '0.2.1',
     author = 'D. HU',
     author_email = 'dangning.hu@cea.fr',
     description = 'Python tool kit based on astropy, etc.',
     license = 'BSD',
     keywords = 'astronomy astrophysics',
     url = 'https://github.com/kxxdhdn/astylo',
+    project_urls={
+        'IDL': 'https://github.com/kxxdhdn/astylo/tree/master/idlib',
+        'SwING': 'https://github.com/kxxdhdn/astylo/tree/master/swing_snippets',
+        'Tests': 'https://github.com/kxxdhdn/astylo/tree/master/tests',
+    },
 
     python_requires='>=3.6',
     install_requires = [

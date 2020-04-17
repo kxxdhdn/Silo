@@ -146,9 +146,9 @@ class improve:
 
         return slist
 
-    def slice_inv_sqrt(self, filSL, postfix=''):
+    def slice_inv_sq(self, filSL, postfix=''):
         ## Inversed square cube slicing
-        inv_sqrt = 1./self.im**2
+        inv_sq = 1./self.im**2
         slist = []
         if self.dim==3:
             hdr = self.hdr.copy()
@@ -160,11 +160,11 @@ class improve:
                 ## output filename list
                 f = filSL+'_'+'0'*(4-len(str(k)))+str(k)+postfix
                 slist.append(f)
-                write_fits(f, hdr, inv_sqrt[k,:,:]) # gauss_noise inclu
+                write_fits(f, hdr, inv_sq[k,:,:]) # gauss_noise inclu
         else:
             f = filSL+'_0000'+postfix
             slist.append(f)
-            write_fits(f, self.hdr, inv_sqrt) # gauss_noise inclu
+            write_fits(f, self.hdr, inv_sq) # gauss_noise inclu
 
         return slist
     
@@ -186,8 +186,7 @@ class improve:
         ##-------------
         if cenpix is None:
             if cenval is None:
-                print('ERROR: crop center unavailable! ')
-                exit()
+                raise ValueError('Crop center unavailable! ')
             else:
                 ## Convert coord
                 try:
@@ -200,15 +199,13 @@ class improve:
         else:
             cenval = self.w.all_pix2world(np.array([cenpix]), 1)[0]
         if not (0<cenpix[0]<self.Nx and 0<cenpix[1]<self.Ny):
-            print("ERROR: crop centre overpassed image border! ")
-            exit()
+            raise ValueError('Crop centre overpassed image border! ')
 
         ## Crop size
         ##-----------
         if sizpix is None:
             if sizval is None:
-                print('ERROR: crop size unavailable! ')
-                exit()
+                raise ValueError('Crop size unavailable! ')
             else:
                 ## CDELTn needed (Physical increment at the reference pixel)
                 sizpix = np.array(sizval) / abs(self.cdelt)
@@ -232,8 +229,7 @@ class improve:
         ymax = ymin + sizpix[1]
 
         if not (xmin>=0 and xmax<=self.Nx and ymin>=0 and ymax<=self.Ny):
-            print("ERROR: crop region overpassed image border! ")
-            exit()
+            raise ValueError('Crop region overpassed image border! ')
 
         ## OUTPUTS
         ##---------
@@ -262,7 +258,18 @@ class islice(improve):
     '''
     Slice a cube
 
-    self: slist, path_tmp, (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
+    ------ INPUT ------
+    filIN               input FITS
+    filSL               ouput path+basename
+    filUNC              input uncertainty FITS
+    dist                unc pdf
+    slicetype           Default: None
+                          None - normal slices
+                          'inv_sq' - inversed square slices
+    postfix             postfix of output slice names
+    ------ OUTPUT ------
+    self: slist, path_tmp, 
+          (filIN, wmod, hdr, w, cdelt, pc, cd, dim, Nx, Ny, Nw, im, wvl)
     '''
     def __init__(self, filIN, filSL=None, filUNC=None, dist='norm', \
         slicetype=None, postfix=''):
@@ -283,8 +290,8 @@ class islice(improve):
 
         if slicetype is None:
             self.slist = self.slice(filSL, postfix) # gauss_noise inclu
-        elif slicetype=='inv_sqrt':
-            self.slist = self.slice_inv_sqrt(filSL, postfix)
+        elif slicetype=='inv_sq':
+            self.slist = self.slice_inv_sq(filSL, postfix)
 
     def image(self):
         return self.im
@@ -433,8 +440,7 @@ class imontage(improve):
             #     self.hdr['CRVAL1'], self.hdr['CRVAL2'], 1))
             # exit()
         else:
-            print('ERROR: Can not find projection reference! ')
-            exit()
+            raise ValueError('Cannot find projection reference! ')
 
     def make(self):
         '''
@@ -688,9 +694,16 @@ class iswarp(improve):
     verbose             default: True
     tmpdir              tmp file path
     ------ OUTPUT ------
+    coadd.fits
+    
+    By default, SWarp reprojects all input to a WCS with diag CD matrix.
+    "To implement the unusual output features required, 
+     one must write a coadd.head ASCII file that contains 
+     a custom anisotropic scaling matrix. "
     '''
-    def __init__(self, filIN, center=None, pixscale=None, \
-        verbose=False, tmpdir=None):
+    def __init__(self, filIN=None, refheader=None,
+                 center=None, pixscale=None, 
+                 verbose=False, tmpdir=None):
         '''
         self: path_tmp, verbose
         (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
@@ -712,46 +725,55 @@ class iswarp(improve):
         
         self.path_tmp = path_tmp
 
-        ## Input files in list format
-        if isinstance(filIN, str):
-            filIN = [filIN]
+        fclean(path_tmp+'coadd*') # remove previous coadd.fits/.head
+
+        if filIN is None:
+            if refheader is None:
+                raise ValueError('No input!')
+            else:
+                self.refheader = refheader
         else:
-            filIN = list(filIN)
-
-        ## Images
-        image_files = ' '
-        for i in range(len(filIN)):
-            image = read_fits(filIN[i]).data
-            hdr = fixwcs(filIN[i]).header
-            file_ref = filIN[i]
-            if len(image.shape)==3:
-                ## Extract 1st frame of the cube
-                file_ref = path_tmp+os.path.basename(filIN[i])+'_ref'
-                write_fits(file_ref, hdr, image[0])
+            ## Input files in list format
+            if isinstance(filIN, str):
+                filIN = [filIN]
+            else:
+                filIN = list(filIN)
             
-            image_files += file_ref+'.fits '
+            ## Images
+            image_files = ' '
+            for i in range(len(filIN)):
+                image = read_fits(filIN[i]).data
+                hdr = fixwcs(filIN[i]).header
+                file_ref = filIN[i]
+                if len(image.shape)==3:
+                    ## Extract 1st frame of the cube
+                    file_ref = path_tmp+os.path.basename(filIN[i])+'_ref'
+                    write_fits(file_ref, hdr, image[0])
+                
+                image_files += file_ref+'.fits ' # input str for SWarp
+            
+            ## Create config file
+            SP.call('swarp -d > swarp.cfg', \
+                shell=True, cwd=path_tmp, stdout=devnull, stderr=SP.STDOUT)
+            
+            ## Config param list
+            swarp_opt = ' -c swarp.cfg -SUBTRACT_BACK N -IMAGEOUT_NAME coadd.ref.fits '
+            if center is not None:
+                swarp_opt += ' -CENTER_TYPE MANUAL -CENTER '+center
+            if pixscale is not None:
+                swarp_opt += ' -PIXELSCALE_TYPE MANUAL -PIXEL_SCALE '+str(pixscale)
+            if verbose=='quiet':
+                swarp_opt += ' -VERBOSE_TYPE QUIET '
+            
+            ## Run SWarp
+            SP.call('swarp '+swarp_opt+image_files, \
+                shell=True, cwd=path_tmp, stdout=devnull, stderr=SP.STDOUT)
 
-        fclean(path_tmp+'coadd*')
-        ## Create config file
-        SP.call('swarp -d > swarp.cfg', \
-            shell=True, cwd=path_tmp, stdout=devnull, stderr=SP.STDOUT)
-        
-        ## Config param list
-        swarp_opt = ' -c swarp.cfg -SUBTRACT_BACK N -IMAGEOUT_NAME coadd.fits '
-        if center is not None:
-            swarp_opt += ' -CENTER_TYPE MANUAL -CENTER '+center
-        if pixscale is not None:
-            swarp_opt += ' -PIXELSCALE_TYPE MANUAL -PIXEL_SCALE '+str(pixscale)
-        if verbose=='quiet':
-            swarp_opt += ' -VERBOSE_TYPE QUIET '
-        
-        ## Run SWarp
-        SP.call('swarp '+swarp_opt+image_files, \
-            shell=True, cwd=path_tmp, stdout=devnull, stderr=SP.STDOUT)
-        newimage = read_fits(path_tmp+'coadd').data
-
-        ## Save ref header
-        self.refheader = read_fits(path_tmp+'coadd').header
+            ## Save ref header
+            if refheader is None:
+                self.refheader = read_fits(path_tmp+'coadd.ref').header
+            else:
+                self.refheader = refheader
 
         # fclean(path_tmp+'*_ref.fits')
 
@@ -786,11 +808,14 @@ class iswarp(improve):
         uncpdf              add uncertainties (filename+'_unc.fits' needed)
         filOUT              output FITS file
         ------ OUTPUT ------
+        coadd.head          key for SWarp (inherit self.refheader)
         '''
         ds = type('', (), {})()
+        
         verbose = self.verbose
         devnull = self.devnull
         path_tmp = self.path_tmp
+        
         if tmpdir is None:
             path_comb = path_tmp+'comb/'
         else:
@@ -838,7 +863,7 @@ class iswarp(improve):
             
             if combtype=='wgt_avg':
                 super().__init__(file[i]+'_unc')
-                wgtlist.append(self.slice_inv_sqrt(file_slice, '.weight'))
+                wgtlist.append(self.slice_inv_sq(file_slice, '.weight'))
 
         ## Build image_files & weight_files (size=Nw)
         image_files = [' ']*Nw
@@ -954,16 +979,16 @@ class iconvolve(improve):
 
     ------ INPUT ------
     filIN               input FITS file
-    filKER              convolution kernel(s) (tuple or list)
-    kfile               CSV file stocking kernel names
+    kfile               convolution kernel(s) (tuple or list)
+    klist               CSV file storing kernel names
     filUNC              unc file (add gaussian noise)
     psf                 PSF list
-    filTMP              temporary file
+    convdir             do_conv path (Default: None -> filIN path)
     filOUT              output file
     ------ OUTPUT ------
     '''
-    def __init__(self, filIN, filKER, kfile, \
-        filUNC=None, dist='norm', psf=None, filTMP=None, filOUT=None):
+    def __init__(self, filIN, kfile, klist, \
+        filUNC=None, dist='norm', psf=None, convdir=None, filOUT=None):
         ## INPUTS
         super().__init__(filIN)
         
@@ -972,11 +997,14 @@ class iconvolve(improve):
         elif dist=='splitnorm':
             self.rand_splitnorm(filUNC)
 
-        ## input kernel file list
-        self.filKER = filKER
+        ## Input kernel file in list format
+        if isinstance(kfile, str):
+            self.kfile = [kfile]
+        else:
+            self.kfile = list(kfile)
         ## doc (csv) file of kernel list
-        self.kfile = kfile
-        self.filTMP = filTMP
+        self.klist = klist
+        self.path_conv = convdir
         self.filOUT = filOUT
 
         ## INIT
@@ -1013,29 +1041,29 @@ class iconvolve(improve):
         sigma_per = fwhm_per / (2. * np.sqrt(2.*np.log(2.)))
         self.sigma_lam = np.sqrt(sigma_par * sigma_per)
         
-    def choker(self, filIM):
+    def choker(self, file):
         ## CHOose KERnel(s)
-        klist = []
-        for i, image in enumerate(filIM):
+        lst = []
+        for i, image in enumerate(file):
             ## check PSF profil (or is not a cube)
             if self.sigma_lam is not None:
-                image = filIM[i]
+                image = file[i]
                 ind = closest(self.psf, self.sigma_lam[i])
-                kernel = self.filKER[ind]
+                kernel = self.kfile[ind]
             else:
-                image = filIM[0]
-                kernel = self.filKER[0]
-            ## klist line elements: image, kernel
+                image = file[0]
+                kernel = self.kfile[0]
+            ## lst line elements: image, kernel
             k = [image, kernel]
-            klist.append(k)
+            lst.append(k)
 
         ## write csv file
-        write_csv(self.kfile, header=['Images', 'Kernels'], dataset=klist)
+        write_csv(self.klist, header=['Images', 'Kernels'], dataset=lst)
 
-    def do_conv(self, ipath, verbose=False):
+    def do_conv(self, idldir, verbose=False):
         '''
         ------ INPUT ------
-        ipath               path of IDL routines
+        idldir              path of IDL routines
         ------ OUTPUT ------
         '''
         if verbose==False:
@@ -1043,24 +1071,23 @@ class iconvolve(improve):
         else:
             devnull = None
 
+        filename = os.path.basename(self.filIN)
+
         if self.dim==3:
-            if self.filTMP is not None:
-                f2conv = self.slice(self.filTMP) # gauss_noise inclu
+            if self.path_conv is not None:
+                f2conv = self.slice(self.path_conv+filename) # gauss_noise inclu
             else:
                 f2conv = self.slice(self.filIN) # gauss_noise inclu
             
             self.spitzer_irs()
 
         else:
-            if self.filTMP is not None: # ?? TO DELETE
-                f2conv = [self.filTMP]
-            else:
-                f2conv = [self.filIN]
+            f2conv = [self.filIN]
         
         self.choker(f2conv)
 
         SP.call('idl conv.pro', \
-            shell=True, cwd=ipath, stdout=devnull, stderr=SP.STDOUT)
+            shell=True, cwd=idldir, stdout=devnull, stderr=SP.STDOUT)
 
         ## OUTPUTS
         ##---------
@@ -1072,14 +1099,14 @@ class iconvolve(improve):
                 self.slist.append(f+'_conv')
 
             self.convim = np.array(im)
-            ## recover non-reduced 3D header
-            self.hdr = read_fits(self.filIN).header
+            ## recover 3D header cause the lost of WCS due to PS3_0='WCS-TAB'
+            # self.hdr = read_fits(self.filIN).header
         else:
             self.convim = read_fits(self.filIN+'_conv').data
         
         if self.filOUT is not None:
             comment = "Convolved by G. Aniano's IDL routine."
-            write_fits(self.filOUT, self.hdr, self.convim, self.wvl, \
+            write_fits(self.filOUT, self.hdr, self.convim, self.wvl, 
                 COMMENT=comment)
 
     def image(self):
@@ -1090,6 +1117,13 @@ class iconvolve(improve):
 
     def filenames(self):
         return self.slist
+
+    def clean(self, file=None):
+        if file is not None:
+            fclean(file)
+        else:
+            if self.path_conv is not None:
+                fclean(self.path_conv)
 
 class sextract(improve):
     '''
@@ -1375,7 +1409,7 @@ def wclean(filIN, cmod='eq', cfile=None, \
                 ## Others
                 ##--------
                 else:
-                    print('ERROR: Not supported clean mode! ')
+                    raise ValueError('Non-supported clean mode! ')
 
                 # print('ind_seg (final): ', ind_seg)
                 ind.extend(ind_seg)
@@ -1443,7 +1477,7 @@ def interfill(arr, axis):
                 for i in range(axsh[1]):
                     newarr[j,i] = row[i]
         else:
-            print('ERROR: Unkown axis! ')
+            raise ValueError('Unknown axis! ')
     elif NAXIS==3:
         if axis==0: # fill wavelength
             z = np.arange(axsh[0])
@@ -1467,9 +1501,9 @@ def interfill(arr, axis):
                     for i in range(axsh[2]):
                         newarr[k,j,i] = row[i]
         else:
-            print('ERROR: Unkown axis! ')
+            raise ValueError('Unknown axis! ')
     else:
-        print('ERROR: array shape not supported! ')
+        raise ValueError('Non-supported array shape! ')
 
     return newarr
 

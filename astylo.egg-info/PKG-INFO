@@ -1,11 +1,14 @@
 Metadata-Version: 1.2
 Name: astylo
-Version: 0.2
+Version: 0.2.1
 Summary: Python tool kit based on astropy, etc.
 Home-page: https://github.com/kxxdhdn/astylo
 Author: D. HU
 Author-email: dangning.hu@cea.fr
 License: BSD
+Project-URL: IDL, https://github.com/kxxdhdn/astylo/tree/master/idlib
+Project-URL: SwING, https://github.com/kxxdhdn/astylo/tree/master/swing_snippets
+Project-URL: Tests, https://github.com/kxxdhdn/astylo/tree/master/tests
 Description: UNKNOWN
 Keywords: astronomy astrophysics
 Platform: UNKNOWN

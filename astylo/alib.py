@@ -100,12 +100,10 @@ def get_cd(pc=None, cdelt=None, header=None, wcs=None):
         if header is not None:
             w = WCS(header)
         else:
-            if WCS is not None:
+            if wcs is not None:
                 w = wcs
             else:
-                print('ERROR: No input!')
-                
-                return ds
+                raise ValueError('No input!')
 
         ds.cd = w.pixel_scale_matrix
 
@@ -153,12 +151,10 @@ def get_pc(cd=None, header=None, wcs=None):
         if header is not None:
             w = WCS(header)
         else:
-            if WCS is not None:
+            if wcs is not None:
                 w = wcs
             else:
-                print('ERROR: No input!')
-                
-                return ds
+                raise ValueError('No input!')
 
         ds.cd = w.pixel_scale_matrix
 
@@ -201,9 +197,7 @@ def fixwcs(file=None, header=None):
         if header is not None:
             hdr = header.copy()
         else:
-            print('\nERROR: No input! \n')
-
-            return ds
+            raise ValueError('No input!')
 
     ## Reduce header dim/kw
     if header['NAXIS']==3:

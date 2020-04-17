@@ -1,0 +1,53 @@
+#+TITLE: pip install astylo
+#+AUTHOR: D. HU
+
+* astylo = +ASTro pYthon siLO+ a pen
+
+/*Silo à MISSILE*/ +est une construction souterraine, sous forme de puits, depuis lequel un missile (notamment de longue portée) peut être rapidement lancé. Le silo est conçu pour protéger des effets d'une explosion nucléaire rapprochée en cas d'attaque d'un missile balistique. Le missile étant très vulnérable au sol et lors du décollage, le silo doit également permettre le lancement dans le délai le plus court possible, avant qu'une autre attaque n'ait lieu. 
+[[https://fr.wikipedia.org/wiki/Silo_à_missile][En savoir plus]]+
+is an [[https://github.com/astropy/astropy][~astropy~]] based Python tool kit for diverse astro programming uses. In particular, it is developed (but not only) for the [[https://github.com/kxxdhdn/MISSILE][~MISSILE~]] (Mid-Infrared Spectroscopy Sublime ILlustration Engine) code during my PhD.
+
+[[./archives/Tucson05_TitanICBM.jpg][SM-68 Titan dans son silo ; Titan Missile Museum.]]
+
+* Helpdesk
+
+** Access to astylo with only one line in command line:
+#+BEGIN_SRC bash
+## Install 
+pip install astylo
+
+## Update
+pip install astylo --upgrade
+
+## Uninstall
+pip uninstall astylo
+#+END_SRC
+Anaconda's environment control is recommanded.
+
+** In order to access the full functionality, you will need the following dependencies:
+- [[https://github.com/kxxdhdn/astylo/tree/master/swing_snippets][~swing_snippets~]]
+- [[https://www.astromatic.net/software/swarp][~SWarp~]]
+- IDL (see [[https://github.com/kxxdhdn/astylo/tree/master/idlib][idlib]])
+
+** Please report any bug or advices to dangning.hu@cea.fr
+
+* Notices
+Empty
+
+* vlog = +Video blog+ Version LOG
+** v0.2.1 (20200417)
+- Add idlib
+- ~ipro~
+  - Correct ~slice_inv_sq~ from ~slice_inv_sqrt~ (not square root but square)
+  - ~iswarp~ supports reprojections with non-diag CD matrix
+  - Relate IDL lib
+  - Add tests
+- ~calib~
+  - ~synthetic_photometry~ option: extrapoff (note)
+- Add ~raise Error~
+** v0.2 (20200413, paques)
+- New features
+- New naming convention
+- Documentation format updated
+- Add tests
+** v0.1 (20191017, anniv)
