@@ -1,11 +1,11 @@
-#+TITLE: astylo
+#+TITLE: astylo development log
 #+AUTHOR: D. HU
 #+TODO: TODO(t) WAIT(w) | DONE(d)
 #+TODO: | CNCL(c@/!)
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0.2.1 (20200417)
+Version: v0.2.2 (202004??)
 Auto version control not yet available. 
 Check ~setup.py~ and astylo/ ~__init_.py~
 * DONE alib (Astro library) [8/8]
@@ -32,7 +32,7 @@ CLOSED: [2020-04-06 Mon 10:06]
 - State "BUG"        from "DONE"       [2020-04-01 Wed 10:51]
 ** DONE fixwcs
 CLOSED: [2020-03-31 Tue 15:05]
-* TODO iolib (Input/output library) [8/9]
+* DONE iolib (Input/output library) [9/9]
 ** DONE fclean
 CLOSED: [2020-03-31 Tue 15:05]
 ** DONE ~read_fits~
@@ -53,16 +53,25 @@ CLOSED: [2020-04-06 Mon 18:23]
 - State "KNOWNCAUSE" from "DONE"       [2020-04-06 Mon 14:46]
 ** DONE ~read_ascii~
 CLOSED: [2020-03-31 Tue 15:05]
-** TODO ~write_ascii~
+** FIXED ~write_ascii~
+CLOSED: [2020-04-30 Thu 02:45]
+- State "FIXED"      from "KNOWNCAUSE" [2020-04-30 Thu 02:45]
+- Note taken on [2020-04-30 Thu 02:07] \\
+  Python 500 row limit when convert array to string!
+- State "KNOWNCAUSE" from "DONE"       [2020-04-30 Thu 02:07]
 ** FIXED ~read_csv~
-CLOSED: [2020-04-06 Mon 19:29]
+CLOSED: [2020-04-29 Wed 18:20]
+- State "FIXED"      from "BUG"        [2020-04-29 Wed 18:20]
+- Note taken on [2020-04-29 Wed 18:19] \\
+  From the 2nd column, headers are included in data array. (pointer issue)
+- State "BUG"        from "FIXED"      [2020-04-29 Wed 18:19]
 - Note taken on [2020-04-06 Mon 19:29] \\
   Need to reset pointer in the loop
 - State "FIXED"      from "BUG"        [2020-04-06 Mon 19:29]
 - Note taken on [2020-04-06 Mon 18:33] \\
   Error when more than one *header input
 - State "BUG"        from "DONE"       [2020-04-06 Mon 18:25]
-** DONE write_csv
+** DONE ~write_csv~
 CLOSED: [2020-03-31 Tue 15:05]
 * WAIT mlib (Math library) [11/12]
 ** DONE ~f_lin~
@@ -140,7 +149,7 @@ Dependencies: alib, iolib, plib
 ** WAIT phot2phot
 ** DONE ~photometry_profile~
 CLOSED: [2020-03-31 Tue 16:13]
-* WAIT ipro (Image processing) [12/13]
+* TODO ipro (Image processing) [12/13]
 Dependencies: alib, iolib, mlib
 - Note taken on [2020-04-17 Fri 11:49] \\
   Add ~raise Error~
@@ -225,7 +234,7 @@ CLOSED: [2020-03-31 Tue 16:12]
 CLOSED: [2020-03-31 Tue 16:11]
 *** DONE wave
 CLOSED: [2020-03-31 Tue 16:11]
-** WAIT wmask
+** TODO wmask
 ** DONE wclean
 CLOSED: [2020-03-31 Tue 16:13]
 ** DONE interfill
@@ -237,6 +246,6 @@ CLOSED: [2020-03-31 Tue 16:13]
 ** DONE concatenate
 CLOSED: [2020-03-31 Tue 16:13]
 * DONE uconvert (Unit conversion) [1/1]
-** DONE Jy_per_pix_to_MJy_per_sr
+** DONE ~Jy_per_pix_to_MJy_per_sr~
 CLOSED: [2020-03-31 Tue 15:09]
 

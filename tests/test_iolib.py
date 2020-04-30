@@ -18,14 +18,15 @@ from astropy.wcs import WCS
 ## Local
 sys.path.insert(0, testdir+'/..') ## astylo path
 from astylo.iolib import (fclean, read_fits, write_fits,
-                         read_hdf5, write_hdf5, read_ascii,
+                         read_hdf5, write_hdf5,
+                          read_ascii, write_ascii,
                          read_csv, write_csv, )
 
 print('\n TEST read_fits ')
 print('----------------')
 get_fdata = read_fits(datdir+'M83', datdir+'M83_unc')
-print('header \n', get_fdata.header)
-print('header of TAB \n', get_fdata.header_w)
+# print('header \n', get_fdata.header)
+# print('header of TAB \n', get_fdata.header_w)
 print('data (shape) \n', get_fdata.data.shape)
 print('wave (shape) \n', get_fdata.wave.shape)
 print('uncertainty (shape) \n', get_fdata.unc.shape)
@@ -54,22 +55,36 @@ print('Label \n', get_hdata[0])
 print('Data1 \n', get_hdata[1])
 print('Data2 \n', get_hdata[2])
 
+print('\n TEST write_ascii ')
+print('------------------')
+lab = ['col1', 'col2']
+arr = np.arange(12).reshape((6,2))
+arr_trans = np.arange(0, 12000, 1000).reshape((2,6))
+write_ascii(outdir+'test_iolib', comment='Empty file!')
+write_ascii(outdir+'test_iolib', lab, arr, comment='Data begins from line 3')
+write_ascii(outdir+'test_iolib', dset=arr_trans, trans=True, append=True)
+# write_ascii(outdir+'ascii_csv', lab, arr, ascext='.csv') # not compatible
+print('See ./out [Done]')
+
 print('\n TEST read_ascii ')
 print('-----------------')
-get_adata = read_ascii(datdir+'IRAC1')
-print('col1 - Wave (microns) \n', get_adata[:,0])
-print('col2 - Spectral Response (electrons/photon) \n', get_adata[:,1])
+get_arr = read_ascii(outdir+'test_iolib', dtype=float)
+print('col1 \n', get_arr['col1'])
+print('col2 \n', get_arr['col2'])
+get_adata = read_ascii(datdir+'IRAC1', start_header=2)
+print('col1 - Wave (microns) \n', get_adata['Wave'][:10])
+print('col2 - Spectral Response (electrons/photon) \n', get_adata['col2'][:10])
 
 print('\n TEST write_csv ')
 print('----------------')
-write_csv(outdir+'test_iolib', ['Wave', 'Spectral Response'], get_adata)
+write_csv(outdir+'test_iolib', lab, arr)
 print('See ./out [Done]')
 
 print('\n TEST read_csv ')
 print('---------------')
-get_cdata = read_csv(outdir+'test_iolib', 'Spectral Response', 'Wave')
-print('Spectral Response \n', get_cdata[0]) # changed list order here
-print('Wave \n', get_cdata[1])
+get_cdata = read_csv(outdir+'test_iolib', 'col2', 'col1')
+print('col2: \n', get_cdata['col2'])
+print('col1: \n', get_cdata['col1'])
 
 if input('Test fclean (y/n): ')=='y':
     print('\n TEST fclean ')

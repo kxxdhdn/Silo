@@ -9,6 +9,7 @@ SYNTHETIC PHOTOMETRY
 
 import os
 import numpy as np
+from astropy.io import ascii
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter, NullFormatter
 import subprocess as SP
@@ -16,7 +17,7 @@ import warnings
 DEVNULL = open(os.devnull, 'w')
 
 ## astylo
-from iolib import read_fits, read_hdf5, write_hdf5, read_ascii
+from iolib import read_fits, read_hdf5, write_hdf5, read_ascii, ascext
 from alib import fixwcs
 from plib import plot2d_m, colib
 
@@ -125,8 +126,9 @@ class intercalib:
         ##-----------------------------------------------------------------------
         if extrapoff==True:
             for phot in filt:
-                w_grid = read_ascii(aroot+'/dat/'+phot)[:,0]
-                w_grid = [float(n) for n in w_grid]
+                # w_grid = read_ascii(aroot+'/dat/'+phot, dtype=float)[:,0]
+                w_grid = ascii.read(aroot+'/dat/'+phot+ascext,
+                                    names=['Wave','Spectral Response'])['Wave']
                 # print(w_spec[0], w_grid[0])
                 # print(w_spec[-1], w_grid[-1])
                 if w_spec[0]>w_grid[0] or w_spec[-1]<w_grid[-1]:
@@ -281,9 +283,12 @@ def photometry_profile(datdir=None, *photometry):
     for phot in photometry:
         if datdir is None:
             datdir = aroot+'/dat/'
-        dat = read_ascii(datdir+phot, dtype=float)
-        lam.append(dat[:,0])
-        val.append(dat[:,1])
+        # dat = read_ascii(datdir+phot, dtype=float)
+        # lam.append(dat[:,0])
+        # val.append(dat[:,1])
+        dat = ascii.read(datdir+phot+ascext, names=['Wave','Spectral Response'])
+        lam.append(dat['Wave'])
+        val.append(dat['Spectral Response'])
     lam = np.array(lam)
     val = np.array(val)
 

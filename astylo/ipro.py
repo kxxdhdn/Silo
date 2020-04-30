@@ -13,11 +13,16 @@ import math
 import numpy as np
 from scipy.io import readsav
 from astropy import wcs
+from astropy.io import ascii
+from astropy.table import Table
 from reproject import reproject_interp
 import subprocess as SP
 
 ## Local
-from iolib import fclean, read_fits, write_fits, read_csv, write_csv, read_ascii
+from iolib import (fclean, read_fits, write_fits,
+                   read_csv, write_csv, read_ascii,
+                   fitsext, csvext, ascext
+)
 from alib import fixwcs, get_pc
 from mlib import nanavg, closest, bsplinterpol
 
@@ -62,12 +67,12 @@ class improve:
         ds = read_fits(filIN)
         self.im = ds.data
         self.wvl = ds.wave
-        self.dim = len(self.im.shape)
-        if len(self.im.shape)==3:
+        self.dim = self.im.ndim
+        if self.dim==3:
             if self.im.shape[0]==1:
                 self.dim = 2 # Nw=1 patch
-        if self.dim==3:
-            self.Nw = len(self.wvl)
+            else:
+                self.Nw = len(self.wvl)
 
     def rand_norm(self, file=None, unc=None, sigma=1., mu=0.):
         '''
@@ -526,10 +531,10 @@ class imontage(improve):
             # phdu = fits.PrimaryHDU(header=hdr, data=self.im[k,:,:])
             # im_rep = reproject_interp(phdu, self.hdr_ref)[0]
         for s in self.slist:
-            im_rep = reproject_interp(s+'.fits', self.hdr_ref)[0]
+            im_rep = reproject_interp(s+fitsext, self.hdr_ref)[0]
             cube_rep.append(im_rep)
             write_fits(s+'rep_', self.hdr_ref, im_rep)
-            fclean(s+'.fits')
+            fclean(s+fitsext)
         self.im = np.array(cube_rep)
 
         comment = "Reprojected by <imontage>. "
@@ -745,12 +750,12 @@ class iswarp(improve):
                 image = read_fits(filIN[i]).data
                 hdr = fixwcs(filIN[i]).header
                 file_ref = filIN[i]
-                if len(image.shape)==3:
+                if image.ndim==3:
                     ## Extract 1st frame of the cube
                     file_ref = path_tmp+os.path.basename(filIN[i])+'_ref'
                     write_fits(file_ref, hdr, image[0])
                 
-                image_files += file_ref+'.fits ' # input str for SWarp
+                image_files += file_ref+fitsext+' ' # input str for SWarp
             
             ## Create config file
             SP.call('swarp -d > swarp.cfg', \
@@ -875,10 +880,10 @@ class iswarp(improve):
         for k in trange(Nw, leave=False, 
             desc='<iswarp> Combining (by wvl)'):
             for i in range(Nf):
-                image_files[k] += imlist[i][k]+'.fits '
+                image_files[k] += imlist[i][k]+fitsext+' '
 
                 if combtype=='wgt_avg':
-                    weight_files[k] += wgtlist[i][k]+'.fits '
+                    weight_files[k] += wgtlist[i][k]+fitsext+' '
 
             ## Create config file
             SP.call('swarp -d > swarp.cfg', \
@@ -1041,24 +1046,42 @@ class iconvolve(improve):
         sigma_per = fwhm_per / (2. * np.sqrt(2.*np.log(2.)))
         self.sigma_lam = np.sqrt(sigma_par * sigma_per)
         
+    # def choker(self, file):
+    #     ## CHOose KERnel(s)
+    #     lst = []
+    #     for i, image in enumerate(file):
+    #         ## check PSF profil (or is not a cube)
+    #         if self.sigma_lam is not None:
+    #             image = file[i]
+    #             ind = closest(self.psf, self.sigma_lam[i])
+    #             kernel = self.kfile[ind]
+    #         else:
+    #             image = file[0]
+    #             kernel = self.kfile[0]
+    #         ## lst line elements: image, kernel
+    #         k = [image, kernel]
+    #         lst.append(k)
+
+    #     ## write csv file
+    #     write_csv(self.klist, header=['Images', 'Kernels'], dset=lst)
+
     def choker(self, file):
         ## CHOose KERnel(s)
-        lst = []
-        for i, image in enumerate(file):
+        image = []
+        kernel = []
+        for i, filim in enumerate(file):
             ## check PSF profil (or is not a cube)
             if self.sigma_lam is not None:
-                image = file[i]
+                image.append(filim)
                 ind = closest(self.psf, self.sigma_lam[i])
-                kernel = self.kfile[ind]
+                kernel.append(self.kfile[ind])
             else:
-                image = file[0]
-                kernel = self.kfile[0]
-            ## lst line elements: image, kernel
-            k = [image, kernel]
-            lst.append(k)
+                image.append(file[0])
+                kernel.append(self.kfile[0])
 
         ## write csv file
-        write_csv(self.klist, header=['Images', 'Kernels'], dataset=lst)
+        dataset = Table([image, kernel], names=['Images', 'Kernels'])
+        ascii.write(dataset, self.klist+csvext, format='csv')
 
     def do_conv(self, idldir, verbose=False):
         '''
@@ -1207,7 +1230,8 @@ class sextract(improve):
         for i in range(Ny):
             ## Ny/Nsub should be integer, or there will be shift
             ispec = math.floor(i / (math.ceil(Ny/Nsub)))
-            spec_arr.append(read_ascii(self.path+'Y12spec'+str(ispec), '.spc', float))
+            # spec_arr.append(read_ascii(self.path+'Y12spec'+str(ispec), '.spc', float))
+            spec_arr.append(ascii.read(self.path+'Y12spec'+str(ispec)+'.spc'))
         spec_arr = np.array(spec_arr)
         Nw = len(spec_arr[0,:,0])
         
@@ -1226,7 +1250,7 @@ class sextract(improve):
                     unc_P[k][j][i] = (spec_arr[j,k,3]-spec_arr[j,k,1])
             wave[k] = spec_arr[0,k,0]
 
-        ## Save spec in wave ascending order
+        ## Save spec in wave ascending order$
         self.cube = cube[::-1]
         self.unc = unc[::-1]
         self.unc_N = unc_N[::-1]
@@ -1327,7 +1351,8 @@ def wclean(filIN, cmod='eq', cfile=None, \
     
     ind = [] # list of indices of wvl to remove
     if cfile is not None:
-        indarxiv = read_csv(cfile, 'Ind')[0]
+        # indarxiv = read_csv(cfile, 'Ind')[0]
+        indarxiv = ascii.read(cfile+csvext)['Ind']
         ind = []
         for i in indarxiv:
             ind.append(int(i))
@@ -1440,7 +1465,7 @@ def wclean(filIN, cmod='eq', cfile=None, \
         for i in ind:
             wlist.append([i, wave[i]])
         write_csv(filOUT+'_wclean_info', \
-            header=['Ind', 'Wavelengths'], dataset=wlist)
+            header=['Ind', 'Wavelengths'], dset=wlist)
 
     return data_new, wave_new
 

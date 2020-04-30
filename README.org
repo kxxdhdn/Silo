@@ -23,26 +23,33 @@ pip install astylo --upgrade
 pip uninstall astylo
 #+END_SRC
 Anaconda's environment control is recommanded.
-
 ** In order to access the full functionality, you will need the following dependencies:
 - [[https://github.com/kxxdhdn/astylo/tree/master/swing_snippets][~swing_snippets~]]
 - [[https://www.astromatic.net/software/swarp][~SWarp~]]
 - IDL (see [[https://github.com/kxxdhdn/astylo/tree/master/idlib][idlib]])
-
+** For the moment, there is only built-in documentation available, which can be called interactively by ~help()~
 ** Please report any bug or advices to dangning.hu@cea.fr
 
 * Notices
 Empty
 
 * vlog = +Video blog+ Version LOG
+** v0.2.2 (2020042?)
+- Replace all ASCII & CSV I/O with astropy.ascii (see calib & ipro)
+- iolib
+  - Add ~write_ascii~ (commented header)
+  - Update ~write_csv~, ~read_ascii~, ~read_csv~ (dict output and other new features)
+- ipro
+  - Merge ~wmask~ & ~wclean~
+  - Add tests
 ** v0.2.1 (20200417)
 - Add idlib
-- ~ipro~
+- ipro
   - Correct ~slice_inv_sq~ from ~slice_inv_sqrt~ (not square root but square)
   - ~iswarp~ supports reprojections with non-diag CD matrix
   - Relate IDL lib
   - Add tests
-- ~calib~
+- calib
   - ~synthetic_photometry~ option: extrapoff (note)
 - Add ~raise Error~
 ** v0.2 (20200413, paques)

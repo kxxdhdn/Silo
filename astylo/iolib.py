@@ -15,7 +15,7 @@ from astropy.io import fits
 import h5py as H5
 import csv
 
-global fitsext, h5ext
+global fitsext, h5ext, ascext, csvext
 fitsext = '.fits'
 h5ext = '.h5'
 ascext = '.txt'
@@ -34,7 +34,7 @@ def read_fits(file, file_unc=None, wmod=0):
     Read fits file (auto detect dim)
 
     ------ INPUT ------
-    file                input fits file
+    file                input FITS filename
     file_unc            input uncertainty file
     wmod                output wave mode (Default: 0)
                           0 - 1darray; 
@@ -91,11 +91,11 @@ def write_fits(file, header, data, wave=None, wmod=0, **hdrl):
     Write fits file
 
     ------ INPUT ------
-    file                input fits file
+    file                output FITS filename
     header              header of primary HDU
     data                data in primary HDU
-    wave                data in table 1 (ndarray. default: None)
-    wmod                wave table format (0 - Image; 1 - BinTable. default: 0)
+    wave                data in table 1 (ndarray. Default: None)
+    wmod                wave table format (0 - Image; 1 - BinTable. Default: 0)
     ------ OUTPUT ------
     '''
     for key, value in hdrl.items():
@@ -132,32 +132,32 @@ def read_hdf5(file, *header):
     Read h5 file
 
     ------ INPUT ------
-    file                input h5 file
+    file                input h5 filename
     header              labels of data to read
     ------ OUTPUT ------
-    dataset             data
+    dset                dataset
     '''
     hf = H5.File(file+h5ext, 'r')
-    dataset = []
+    dset = []
     for hdr in header:
         data = hf.get(hdr)
         data = np.array(data)
-        dataset.append(data)
+        dset.append(data)
 
     hf.close()
 
-    return dataset
+    return dset
 
 def write_hdf5(file, header, data, append=False, amod=True):
     '''
     Write h5 file
 
     ------ INPUT ------
-    file                file name of the new h5 file
+    file                output h5 filename
     header              label of data (one at a time)
     data                data (dim < 4 if elements consist of strings)
-    append              True: if not overwrite (default: False)
-    amod                auto ASCII data mode (default: True)
+    append              True: if not overwrite (Default: False)
+    amod                auto ASCII data mode (Default: True)
     ------ OUTPUT ------
     '''
     if append==True:
@@ -206,64 +206,210 @@ def write_hdf5(file, header, data, append=False, amod=True):
     hf.flush()
     hf.close()
 
-def read_ascii(file, ascext=ascext, dtype=str):
+def read_ascii(file, ascext=ascext, dtype=str, start_header=-1):
     '''
     Read ASCII file
+    Supported format: commented_header
+    See also: astropy.io.ascii.read, numpy.genfromtxt
 
     ------ INPUT ------
-    file                input ASCII file
-    dtype               data type (default: 'str')
+    file                input ASCII filename
+    ascext              ASCII file suffix (Default: '.txt')
+    dtype               data type (Default: 'str')
+    start_header        line number of the header line (Default: -1)
     ------ OUTPUT ------
-    dataset             output data array
+    dset                dataset (dict)
     '''
     with open(file+ascext, 'r') as f:
         ## f.read() -> str | f.readlines() -> list
-        dataset = []
-        for line in f.readlines():
+        header = None
+        darr = []
+        for i, line in enumerate(f.readlines()):
             line = line.strip()
             # print(line)
-            if line[0]!='#':
+            if line[0]=='#':
+                ## By default, header is taken from the last commented line before data
+                if isinstance(start_header, int)==True:
+                    if start_header==-1:
+                        header = line.split()[1:]
+                    elif start_header>0 and i==start_header-1:
+                        print('coucou')
+                        header = line.split()[1:]
+            else:
                 line = list(map(dtype, line.split()))
-                data = []
-                for vec in line:
-                    data.append(vec)
-                dataset.append(data)
+                row = []
+                for cell in line:
+                    row.append(cell)
+                darr.append(row)
 
-    dataset = np.array(dataset)
+    darr = np.array(darr)
 
-    return dataset
+    ## Number of columns/rows
+    nrow, ncol = darr.shape
+
+    ## Default header = ['col1','col2',...]
+    header_default = []
+    for x in range(ncol):
+        header_default.append('col'+str(x+1))
+
+    ## Dict out
+    dset = {}
+    for x, h in enumerate(header_default): 
+        dset[h] = darr[:,x]
+        if header is not None:
+            dset[header[x]] = darr[:,x]
+
+    return dset
+
+def write_ascii(file, header=None, dset=None, trans=False,
+                ascext=ascext, append=False, comment=None):
+    '''
+    Write ASCII file
+    Supported format: commented_header
+    See also: astropy.io.ascii.write, numpy.savetxt
+    
+    ------ INPUT ------
+    file                input ASCII filename
+    header              data header
+    dset                dataset (1darray[nrow], 2darray[nrow,ncol] or list)
+    trans               transpose dset (Default: False)
+    ascext              ASCII file suffix (Default: '.txt')
+    append              True: if not overwrite (Default: False)
+    comment             single line comment on top
+    ------ OUTPUT ------
+    '''
+    if append==True:
+        mod = 'a'
+    else:
+        mod = 'w'
+
+    with open(file+ascext, mod) as f:
+        pass
+        ## Comment on the top
+        ##--------------------
+        if comment is not None:
+            f.write('## '+comment+'\n')
+        
+        ## Number of columns/rows
+        ncol = 0
+        nrow = 0
+        ## Dataset
+        ##---------
+        rows = ''
+        if dset is not None:
+            dset = np.array(dset)
+            ## Transpose dset
+            if trans==True:
+                Ny, Nx = dset.shape
+                darr = []
+                for x in range(Nx):
+                    for y in range(Ny):
+                        darr.append(dset[y,x])
+                darr = np.array(darr).reshape((Nx,Ny))
+            else:
+                darr = dset
+            ## Update number of columns/rows
+            dim = darr.ndim
+            if dim==1:
+                ncol = 1
+                nrow = len(darr)
+            else:
+                nrow, ncol = darr.shape
+            ## Convert dataset array to string
+            if dim==1 or dim==2:
+                if nrow<500:
+                    rows += str(darr).replace('[','').replace(']','')+'\n'
+                else:
+                    ## Python 500 row limit
+                    for i in range(nrow//500+1):
+                        rows += str(darr[500*i:500*(i+1)]).replace('[','').replace(']','')+'\n'
+            else:
+                raise ValueError(
+                    'Expected 1D or 2D array, got {}D array instead!'.format(dim))
+        ## Header
+        ##--------
+        hrow = ''
+        if header is not None:
+            if isinstance(header, str):
+                header = [header]
+            else:
+                header = list(header)
+                
+            for i, h in enumerate(header):
+                if i==0:
+                    hrow += h
+                else:
+                    hrow += ' '+h
+            hrow += '\n'
+            ## Update number of columns/rows
+            ncol = len(header)
+            nrow += 1
+        ## Column width control
+        ##----------------------
+        ## Table in a single string
+        if nrow==0:
+            fwrows = ''
+        else:
+            cells = hrow.split()
+            cells.extend(rows.split())
+            cells = np.array(cells).reshape((-1,ncol))
+            col_width = []
+            for x in range(ncol):
+               col_width.append(len(max(cells[:,x], key=len)))
+            ## Table with fixed column widths in a single string
+            if hrow=='':
+                fwrows = '' # no header
+            else:
+                fwrows = '# '
+            for y in range(nrow):
+                for x in range(ncol):
+                    c = cells[y,x]
+                    ## '{message:{fill}{align}{width}}'.format(
+                    ##     message=c, fill=' ', align='>', width=col_width+1)
+                    if y==0 and x==0 and header is not None:
+                        ## Due to hashtag
+                        fwrows += ''.ljust(col_width[x]-len(c))+c
+                    else:
+                        fwrows += ''.ljust(col_width[x]+2-len(c))+c
+                    if x==ncol-1:
+                        fwrows += '\n'
+
+        f.write(fwrows)
 
 def read_csv(file, *header):
     '''
     Read csv file
 
     ------ INPUT ------
-    file                input csv file
+    file                input csv filename
     header              labels of data to read
     ------ OUTPUT ------
-    dataset             dataset
+    dset                dataset (dict)
     '''
     with open(file+csvext, 'r', newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        dataset = []
-        for hdr in header:
+        dset = {}
+        for h in header:
             csvfile.seek(0) # reset pointer
-            data = []
+            reader = csv.DictReader(csvfile) # pointer at end
+            col = []
             for row in reader:
-                data.append(row[hdr])
-            data = np.array(data)
-            dataset.append(data)
+                col.append(row[h])
+            data = np.array(col)
+            dset[h] = data
 
-    return dataset
+    return dset
 
-def write_csv(file, header, dataset, append=False):
+def write_csv(file, header, dset, trans=False, append=False):
     '''
     Read fits file
+    See also: astropy.io.ascii.write
 
     ------ INPUT ------
-    file                file name of the csv file
-    header              labels of data, list('label1', 'label2', ...)
-    dataset             data, list([d11, d12, ...], [d21, d22, ...], ...)
+    file                output csv filename
+    header              data labels in list('label1', 'label2', ...)
+    dset                dataset (1darray[nrow], 2darray[nrow,ncol] or list)
+    trans               transpose dset (Default: False)
+    append              True: if not overwrite (Default: False)
     ------ OUTPUT ------
     '''
     if append==True:
@@ -274,14 +420,36 @@ def write_csv(file, header, dataset, append=False):
     with open(file+csvext, mod, newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=header)
 
+        ## Header
+        ##--------
         writer.writeheader()
 
-        for i in range(len(dataset)):
+        ## Dataset
+        ##---------
+        dset = np.array(dset)
+        ## Transpose dset
+        if trans==True:
+            Ny, Nx = dset.shape
+            darr = []
+            for x in range(Nx):
+                for y in range(Ny):
+                    darr.append(dset[y,x])
+            darr = np.array(darr).reshape((Nx,Ny))
+        else:
+            darr = dset
+        ## Number of columns/rows
+        dim = darr.ndim
+        if dim==1:
+            ncol = 1
+            nrow = darr.shape[0]
+        else:
+            nrow, ncol = darr.shape
+        ## Write
+        for y in range(nrow):
             ## Init dict
-            row = {hdr: [] for hdr in header}
-            data = dataset[i]
+            rows = {h: [] for h in header}
             ## Write dict
-            for j in range(len(header)):
-                row[header[j]] = data[j]
+            for x in range(ncol):
+                rows[header[x]] = darr[y,x]
             ## Write csv row
-            writer.writerow(row)
+            writer.writerow(rows)
