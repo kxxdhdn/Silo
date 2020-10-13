@@ -18,7 +18,7 @@ from astropy.wcs import WCS
 ## Local
 sys.path.insert(0, testdir+'/..') ## astylo path
 from astylo.iolib import read_fits, write_fits
-from astylo.alib import fixwcs
+from astylo.astrolib import fixwcs
 from astylo.ipro import (improve, islice, icrop, iswarp, iconvolve,
                           sextract, wclean, interfill, hextract, hswarp)
 

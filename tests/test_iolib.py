@@ -19,7 +19,7 @@ from astropy.wcs import WCS
 sys.path.insert(0, testdir+'/..') ## astylo path
 from astylo.iolib import (fclean, read_fits, write_fits,
                          read_hdf5, write_hdf5,
-                          read_ascii, write_ascii,
+                         read_ascii, write_ascii,
                          read_csv, write_csv, )
 
 print('\n TEST read_fits ')
@@ -42,18 +42,27 @@ print('\n TEST write_hdf5 ')
 print('-----------------')
 label = [['alpha', 'beta', 'gamma'], [1,2,3]]
 data1 = np.arange(5, 23, 2).reshape((3,3))
-data2 = [1,2,3]
+# data2 = [1,2,3]
+# data2 = [[1,2,3]]
+data2 = np.arange(4).reshape((2,2))
 write_hdf5(outdir+'test_iolib', 'Label', label)
-write_hdf5(outdir+'test_iolib', 'Data1', data1, append=True)
-write_hdf5(outdir+'test_iolib', 'Data2', data2, append=True)
+write_hdf5(outdir+'test_iolib', 'Data', data1, append=True)
+# write_hdf5(outdir+'test_iolib', 'Data', data2, ind1=[2,5], append=True)
+# write_hdf5(outdir+'test_iolib', 'Data', data2, ind1=1, ind2=[0,3], append=True)
+write_hdf5(outdir+'test_iolib', 'Data', data2, ind1=[0,2], ind2=[1,3], append=True)
+write_hdf5(outdir+'test_iolib_h5grp', 'Grp data', data1, group='/test_grp', verbose=True)
+write_hdf5(outdir+'test_iolib_h5grp', 'Grp data', data2, group='/test_grp', 
+    ind1=[0,2], ind2=[1,3], append=True, verbose=True)
 print('See ./out [Done]')
 
 print('\n TEST read_hdf5 ')
 print('----------------')
-get_hdata = read_hdf5(outdir+'test_iolib', 'Label', 'Data1', 'Data2')
-print('Label \n', get_hdata[0])
-print('Data1 \n', get_hdata[1])
-print('Data2 \n', get_hdata[2])
+get_label = read_hdf5(outdir+'test_iolib', 'Label')
+print('Label \n', get_label)
+get_data = read_hdf5(outdir+'test_iolib', 'Data')
+print('Data \n', get_data)
+get_grp = read_hdf5(outdir+'test_iolib_h5grp', 'Grp data', group='test_grp')
+print('Grp data \n', get_grp)
 
 print('\n TEST write_ascii ')
 print('------------------')
@@ -71,7 +80,7 @@ print('-----------------')
 get_arr = read_ascii(outdir+'test_iolib', dtype=float)
 print('col1 \n', get_arr['col1'])
 print('col2 \n', get_arr['col2'])
-get_adata = read_ascii(datdir+'IRAC1', start_header=2)
+get_adata = read_ascii(datdir+'filt_IRAC1', start_header=2)
 print('col1 - Wave (microns) \n', get_adata['Wave'][:10])
 print('col2 - Spectral Response (electrons/photon) \n', get_adata['col2'][:10])
 

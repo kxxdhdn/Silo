@@ -6,7 +6,6 @@
 SYNTHETIC PHOTOMETRY
 
 """
-
 import os
 import numpy as np
 from astropy.io import ascii
@@ -17,47 +16,14 @@ import warnings
 DEVNULL = open(os.devnull, 'w')
 
 ## astylo
-from iolib import read_fits, read_hdf5, write_hdf5, read_ascii, ascext
-from alib import fixwcs
-from plib import plot2d_m, colib
+from arrlib import allist
+from iolib import (ascext,
+                   read_fits, read_hdf5, write_hdf5#, read_ascii
+)
+from astrolib import fixwcs
+from plotlib import plot2D_m, colib
 
 aroot = os.path.dirname(os.path.abspath(__file__))
-
-def specorrect(filIN, factor=1., offset=0., wlim=(None,None), filOUT=None):
-    '''
-    calibrate spectra from different obs. in order to eliminate gaps
-    
-
-    --- INPUT ---
-    filIN       input fits file
-    factor      scalar or ndarray (Default: 1.)
-    offset      scalar or ndarray (Default: 0.)
-    wlim        wave limits (Default: (None,None) = all spectrum)
-    filOUT      overwrite fits file (Default: NO)
-    --- OUTPUT ---
-    im          im = factor * im + offset
-    '''
-    hdr = read_fits(file=filIN).header
-    im = read_fits(file=filIN).data
-    wvl = read_fits(file=filIN).wave
-
-    if wlim[0] is None:
-        wmin = wvl[0]
-    else:
-        wmin = wlim[0]
-    if wlim[1] is None:
-        wmax = wvl[-1]
-    else:
-        wmin = wlim[1]
-        
-    for k, lam in enumerate(wvl):
-        if lam>=wmin and lam<=wmax:
-            im[k,:,:] = factor * im[k,:,:] + offset
-                
-    if filOUT is not None:
-        write_fits(filOUT, hdr, im, wave=wvl)
-
-    return im
 
 ##-----------------------------------------------
 
@@ -84,7 +50,7 @@ class intercalib:
             self.im = ds.data
             self.wvl = ds.wave
 
-    def synthetic_photometry(self, filt, w_spec=None, Fnu_spec=None, \
+    def synthetic_photometry(self, filt, w_spec=None, Fnu_spec=None, 
                              extrapoff=True, verbose=False):
         '''
         External Fortran library (SwING) needed
@@ -104,10 +70,7 @@ class intercalib:
         ds = type('', (), {})()
 
         ## Convert all format phot names to list
-        if isinstance(filt, str):
-            filt = [filt]
-        else:
-            filt = list(filt)
+        filt = allist(filt)
 
         ## Input is a FITS file
         if self.filIN is not None:
@@ -117,17 +80,17 @@ class intercalib:
         w_spec = np.array(w_spec)
         Fnu_spec = np.array(Fnu_spec)
         if len(Fnu_spec.shape)==1:
-            dim = 1
+            Ndim = 1
             Fnu_spec = Fnu_spec[:,np.newaxis,np.newaxis]
         else:
-            dim = 3
+            Ndim = 3
 
         ## Do not extrapolate the wave grid that is not covered by input spectra
         ##-----------------------------------------------------------------------
         if extrapoff==True:
             for phot in filt:
-                # w_grid = read_ascii(aroot+'/dat/'+phot, dtype=float)[:,0]
-                w_grid = ascii.read(aroot+'/dat/'+phot+ascext,
+                # w_grid = read_ascii(aroot+'/dat/filt_'+phot, dtype=float)[:,0]
+                w_grid = ascii.read(aroot+'/dat/filt_'+phot+ascext,
                                     names=['Wave','Spectral Response'])['Wave']
                 # print(w_spec[0], w_grid[0])
                 # print(w_spec[-1], w_grid[-1])
@@ -158,17 +121,16 @@ class intercalib:
         ##----------------
         fortOUT = os.getcwd()+'/synthetic_photometry_output'
 
-        ds.wcen, ds.Fnu_filt, ds.smat = read_hdf5(fortOUT, \
-            'Central wavelength (microns)', \
-            'Flux (x.Hz-1)', \
-            'Standard deviation matrix')
+        ds.wcen = read_hdf5(fortOUT, 'Central wavelength (microns)')
+        ds.Fnu_filt = read_hdf5(fortOUT, 'Flux (x.Hz-1)')
+        ds.smat = read_hdf5(fortOUT, 'Standard deviation matrix')
         
         ## Convert zeros to NaNs
         ma_zero = np.ma.array(ds.Fnu_filt, mask=(ds.Fnu_filt==0)).mask
         ds.Fnu_filt[ma_zero] = np.nan
 
         ## Reform outputs
-        if dim==1:
+        if Ndim==1:
             ds.Fnu_filt = ds.Fnu_filt[:,0,0]
         if len(ds.wcen)==1:
             ds.wcen = ds.wcen[0]
@@ -182,6 +144,60 @@ class intercalib:
             SP.call('rm -rf '+fortOUT+'.h5', shell=True, cwd=os.getcwd())
 
         return ds
+
+    def specorrect(self, factor=1., offset=0., w_spec=None, Fnu_spec=None,
+                   wlim=(None,None), filOUT=None):
+        '''
+        Calibrate spectra from different obs. in order to eliminate gaps
+        
+        
+        ------ INPUT ------
+        factor              scalar or ndarray (Default: 1.)
+        offset              scalar or ndarray (Default: 0.)
+        w_spec              wavelengths (Default: None - via filIN)
+        Fnu_spec            spectra (Default: None - via filIN)
+        wlim                wave limits (Default: (None,None))
+        filOUT              overwrite fits file (Default: NO)
+        ------ OUTPUT ------
+        new_spec            new_spec = factor * Fnu_spec + offset
+        '''
+        ## Input is a FITS file
+        if self.filIN is not None:
+            w_spec = self.wvl
+            Fnu_spec = self.im
+
+        w_spec = np.array(w_spec)
+        Fnu_spec = np.array(Fnu_spec)
+        if len(Fnu_spec.shape)==1:
+            Ndim = 1
+            Fnu_spec = Fnu_spec[:,np.newaxis,np.newaxis]
+        else:
+            Ndim = 3
+
+        ## Truncate wavelengths
+        if wlim[0] is None:
+            wmin = w_spec[0]
+        else:
+            wmin = wlim[0]
+        if wlim[1] is None:
+            wmax = w_spec[-1]
+        else:
+            wmax = wlim[1]
+
+        ## Modify spectra
+        new_spec = np.copy(Fnu_spec)
+        for k, lam in enumerate(w_spec):
+            if lam>=wmin and lam<=wmax:
+                new_spec[k,:,:] = factor * Fnu_spec[k,:,:] + offset
+
+        ## Reform outputs
+        if Ndim==1:
+            new_spec = new_spec[:,0,0]
+                    
+        if filOUT is not None:
+            write_fits(filOUT, hdr, new_spec, wave=w_spec)
+        
+        return new_spec
 
 """
 class spec2phot(intercalib):
@@ -283,10 +299,10 @@ def photometry_profile(datdir=None, *photometry):
     for phot in photometry:
         if datdir is None:
             datdir = aroot+'/dat/'
-        # dat = read_ascii(datdir+phot, dtype=float)
+        # dat = read_ascii(datdir+'filt_'+phot, dtype=float)
         # lam.append(dat[:,0])
         # val.append(dat[:,1])
-        dat = ascii.read(datdir+phot+ascext, names=['Wave','Spectral Response'])
+        dat = ascii.read(datdir+'filt_'+phot+ascext, names=['Wave','Spectral Response'])
         lam.append(dat['Wave'])
         val.append(dat['Spectral Response'])
     lam = np.array(lam)
@@ -294,7 +310,7 @@ def photometry_profile(datdir=None, *photometry):
 
     ## Plotting setting
     ##------------------
-    p = plot2d_m(lam, val, xlim=(1.9, 40.), ylim=(-.01, 1.01), \
+    p = plot2D_m(lam, val, xlim=(1.9, 40.), ylim=(-.01, 1.01), \
     xlog=1, ylog=1, cl=colib[2:], lw=1.8, \
     lablist=photometry, \
     xlab=r'$Wavelength,\,\,\lambda\,\,[\mu m]$', \

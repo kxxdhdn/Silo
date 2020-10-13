@@ -19,12 +19,13 @@ from reproject import reproject_interp
 import subprocess as SP
 
 ## Local
-from iolib import (fclean, read_fits, write_fits,
-                   read_csv, write_csv, read_ascii,
-                   fitsext, csvext, ascext
+from iolib import (fitsext, csvext, ascext, fclean,
+                   read_fits, write_fits,
+                   # read_csv, write_csv, read_ascii,
 )
-from alib import fixwcs, get_pc
-from mlib import nanavg, closest, bsplinterpol
+from arrlib import allist, closest
+from mathlib import nanavg, bsplinterpol
+from astrolib import fixwcs, get_pc
 
 savext = '.sav'
 
@@ -40,7 +41,7 @@ class improve:
     '''
     def __init__(self, filIN, wmod=0, verbose=False):
         '''
-        self: filIN, wmod, hdr, w, cdelt, pc, cd, dim, Nx, Ny, Nw, im, wvl
+        self: filIN, wmod, hdr, w, cdelt, pc, cd, Ndim, Nx, Ny, Nw, im, wvl
         '''
         
         ## INPUTS
@@ -67,10 +68,10 @@ class improve:
         ds = read_fits(filIN)
         self.im = ds.data
         self.wvl = ds.wave
-        self.dim = self.im.ndim
-        if self.dim==3:
+        self.Ndim = self.im.ndim
+        if self.Ndim==3:
             if self.im.shape[0]==1:
-                self.dim = 2 # Nw=1 patch
+                self.Ndim = 2 # Nw=1 patch
             else:
                 self.Nw = len(self.wvl)
 
@@ -108,14 +109,14 @@ class improve:
             peak = 1/(1+tau)
             theta = np.random.normal(mu, sigma, self.im.shape) # ~N(0,1)
             flag = np.random.random(self.im.shape) # ~U(0,1)
-            if self.dim==2:
+            if self.Ndim==2:
                 for x in range(self.Nx):
                     for y in range(self.Ny):
                         if flag[y,x]<peak[y,x]:
                             self.im[y,x] += -abs(theta[y,x]) * unc[0][y,x]
                         else:
                             self.im[y,x] += abs(theta[y,x]) * unc[1][y,x]
-            elif self.dim==3:
+            elif self.Ndim==3:
                 for x in range(self.Nx):
                     for y in range(self.Ny):
                         for k in range(self.Nw):
@@ -131,7 +132,7 @@ class improve:
     def slice(self, filSL, postfix=''):
         ## 3D cube slicing
         slist = []
-        if self.dim==3:
+        if self.Ndim==3:
             hdr = self.hdr.copy()
             for kw in self.hdr.keys():
                 if '3' in kw:
@@ -155,7 +156,7 @@ class improve:
         ## Inversed square cube slicing
         inv_sq = 1./self.im**2
         slist = []
-        if self.dim==3:
+        if self.Ndim==3:
             hdr = self.hdr.copy()
             for kw in self.hdr.keys():
                 if '3' in kw:
@@ -239,11 +240,11 @@ class improve:
         ## OUTPUTS
         ##---------
         ## New image
-        if self.dim==3:
+        if self.Ndim==3:
             self.im = self.im[:, ymin:ymax, xmin:xmax] # gauss_noise inclu
             ## recover 3D non-reduced header
             self.hdr = read_fits(self.filIN).header
-        elif self.dim==2:
+        elif self.Ndim==2:
             self.im = self.im[ymin:ymax, xmin:xmax] # gauss_noise inclu
         ## Modify header
         ## Suppose no non-linear distortion
@@ -274,7 +275,7 @@ class islice(improve):
     postfix             postfix of output slice names
     ------ OUTPUT ------
     self: slist, path_tmp, 
-          (filIN, wmod, hdr, w, cdelt, pc, cd, dim, Nx, Ny, Nw, im, wvl)
+          (filIN, wmod, hdr, w, cdelt, pc, cd, Ndim, Nx, Ny, Nw, im, wvl)
     '''
     def __init__(self, filIN, filSL=None, filUNC=None, dist='norm', \
         slicetype=None, postfix=''):
@@ -358,7 +359,7 @@ class imontage(improve):
         fmod='ref', ext_pix=0, tmpdir=None):
         '''
         self: hdr_ref, path_tmp, 
-        (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
+        (filIN, wmod, hdr, w, Ndim, Nx, Ny, Nw, im, wvl)
         '''
         ## Set path of tmp files
         if tmpdir is None:
@@ -711,7 +712,7 @@ class iswarp(improve):
                  verbose=False, tmpdir=None):
         '''
         self: path_tmp, verbose
-        (filIN, wmod, hdr, w, dim, Nx, Ny, Nw, im, wvl)
+        (filIN, wmod, hdr, w, Ndim, Nx, Ny, Nw, im, wvl)
         '''
         if verbose==False:
             devnull = open(os.devnull, 'w')
@@ -739,10 +740,7 @@ class iswarp(improve):
                 self.refheader = refheader
         else:
             ## Input files in list format
-            if isinstance(filIN, str):
-                filIN = [filIN]
-            else:
-                filIN = list(filIN)
+            filIN = allist(filIN)
             
             ## Images
             image_files = ' '
@@ -829,10 +827,7 @@ class iswarp(improve):
             os.makedirs(path_comb)
 
         ## Input files in list format
-        if isinstance(file, str):
-            file = [file]
-        else:
-            file = list(file)
+        file = allist(file)
         
         ## Header
         ##--------
@@ -1003,10 +998,8 @@ class iconvolve(improve):
             self.rand_splitnorm(filUNC)
 
         ## Input kernel file in list format
-        if isinstance(kfile, str):
-            self.kfile = [kfile]
-        else:
-            self.kfile = list(kfile)
+        self.kfile = allist(kfile)
+
         ## doc (csv) file of kernel list
         self.klist = klist
         self.path_conv = convdir
@@ -1096,7 +1089,7 @@ class iconvolve(improve):
 
         filename = os.path.basename(self.filIN)
 
-        if self.dim==3:
+        if self.Ndim==3:
             if self.path_conv is not None:
                 f2conv = self.slice(self.path_conv+filename) # gauss_noise inclu
             else:
@@ -1114,7 +1107,7 @@ class iconvolve(improve):
 
         ## OUTPUTS
         ##---------
-        if self.dim==3:
+        if self.Ndim==3:
             im = []
             self.slist = []
             for f in f2conv:

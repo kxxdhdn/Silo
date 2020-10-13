@@ -2,10 +2,10 @@ from setuptools import setup
 
 setup(
     name = 'astylo',
-    version = '0.2.1',
+    version = '0.3',
     author = 'D. HU',
     author_email = 'dangning.hu@cea.fr',
-    description = 'Python tool kit based on astropy, etc.',
+    description = 'Python tool kit based on astropy, h5py, etc.',
     license = 'BSD',
     keywords = 'astronomy astrophysics',
     url = 'https://github.com/kxxdhdn/astylo',

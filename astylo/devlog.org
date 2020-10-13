@@ -5,10 +5,16 @@
 #+TODO: REPORT(r!) BUG(b!) KNOWNCAUSE(k!) | FIXED(f!)
 #+STARTUP: logdone
 
-Version: v0.2.2 (202004??)
+Version: v0.3 (20201007)
 Auto version control not yet available. 
-Check ~setup.py~ and astylo/ ~__init_.py~
-* DONE alib (Astro library) [8/8]
+Check ../README, ../~setup.py~ and ./ ~__init_.py~
+
+* DONE arrlib (Array library) [3/3]
+** DONE allist
+CLOSED: [2020-10-08 Thu 16:19]
+** DONE closest
+CLOSED: [2020-10-08 Thu 15:09]
+* DONE astrolib (Astro library) [8/8]
 ** DONE pix2sr
 CLOSED: [2020-03-31 Tue 15:05]
 ** DONE sr2arcsec2
@@ -32,21 +38,25 @@ CLOSED: [2020-04-06 Mon 10:06]
 - State "BUG"        from "DONE"       [2020-04-01 Wed 10:51]
 ** DONE fixwcs
 CLOSED: [2020-03-31 Tue 15:05]
-* DONE iolib (Input/output library) [9/9]
+* DONE iolib (Input/Output library) [9/9]
 ** DONE fclean
 CLOSED: [2020-03-31 Tue 15:05]
 ** DONE ~read_fits~
 CLOSED: [2020-03-31 Tue 15:05]
 ** DONE ~write_fits~
 CLOSED: [2020-03-31 Tue 15:05]
-** FIXED ~read_hdf5~
-CLOSED: [2020-04-17 Fri 17:09]
+** DONE ~read_hdf5~
+CLOSED: [2020-10-13 Tue 10:15]
+- Note taken on [2020-10-08 Thu 10:07] \\
+  new inputs format (SwING); add HDF5 group option
 - State "FIXED"      from "REPORT"     [2020-04-17 Fri 17:09]
 - Note taken on [2020-04-16 Thu 12:38] \\
   Unknown flib related issue via Fred
 - State "REPORT"     from "DONE"       [2020-04-16 Thu 12:38]
-** FIXED ~write_hdf5~
-CLOSED: [2020-04-06 Mon 18:23]
+** DONE ~write_hdf5~
+CLOSED: [2020-10-13 Tue 10:15]
+- Note taken on [2020-10-08 Thu 10:06] \\
+  new inputs format (SwING); add HDF5 group option
 - State "FIXED"      from "KNOWNCAUSE" [2020-04-06 Mon 18:23]
 - Note taken on [2020-04-06 Mon 14:46] \\
   Better to embed h5py string encoding issue
@@ -73,7 +83,7 @@ CLOSED: [2020-04-29 Wed 18:20]
 - State "BUG"        from "DONE"       [2020-04-06 Mon 18:25]
 ** DONE ~write_csv~
 CLOSED: [2020-03-31 Tue 15:05]
-* WAIT mlib (Math library) [11/12]
+* TODO mathlib (Math library) [11/12]
 ** DONE ~f_lin~
 CLOSED: [2020-03-31 Tue 15:05]
 ** DONE ~f_lin1~
@@ -101,11 +111,13 @@ CLOSED: [2020-03-31 Tue 15:05]
 - State "BUG"        from "DONE"       [2020-04-07 Tue 11:17]
 ** DONE nanavg
 CLOSED: [2020-03-31 Tue 15:05]
-** DONE closest
-CLOSED: [2020-03-31 Tue 15:05]
 ** DONE bsplinterpol
 CLOSED: [2020-03-31 Tue 15:05]
-* DONE plib (Plot library) [3/3]
+** CNCL closest
+CLOSED: [2020-03-31 Tue 15:05]
+- State "CNCL"       from "DONE"       [2020-10-08 Thu 15:09] \\
+  moved to arrlib
+* TODO plotlib (Plot library) [3/4]
 ** DONE plotool [100%]
 *** DONE figure
 CLOSED: [2020-03-31 Tue 15:07]
@@ -127,14 +139,18 @@ CLOSED: [2020-03-31 Tue 15:07]
 CLOSED: [2020-03-31 Tue 15:07]
 *** DONE show
 CLOSED: [2020-03-31 Tue 15:07]
-** DONE plot2d
+** DONE plot2D
 CLOSED: [2020-03-31 Tue 15:07]
-** DONE ~plot2d_m~
+** DONE ~plot2D_m~
 CLOSED: [2020-03-31 Tue 15:07]
-* TODO calib (Calibration library) [1/5]
+** TODO hist
+* DONE unitlib (Unit library) [1/1]
+** DONE ~Jy_per_pix_to_MJy_per_sr~
+CLOSED: [2020-03-31 Tue 15:09]
+
+* TODO calib (Calibration library) [1/4]
 Dependencies: alib, iolib, plib
-** TODO specorrect
-** WAIT intercalib [0%]
+** TODO intercalib [50%]
 *** KNOWNCAUSE ~synthetic_photometry~
 - Note taken on [2020-04-17 Fri 18:35] \\
   For extrapolation off (extrapoff) option, we can simply set zeros for the uncovered beginning of the spectrum, and this step can avoid important bias given by the extrapolation. While for the end of spectrum, it is not right to set zeros considering the non-negligible continuum, etc. although the total flux can be less. (Spectra in the context of mid-IR range.)
@@ -145,6 +161,8 @@ Dependencies: alib, iolib, plib
 - Note taken on [2020-04-13 Mon 12:09] \\
   When tmpdir is not default (cwd), ~synthetic_photometry~ cannot find input.h5
 - State "BUG"        from "DONE"       [2020-04-13 Mon 12:09]
+*** DONE specorrect
+CLOSED: [2020-10-13 Tue 11:21]
 ** WAIT spec2phot
 ** WAIT phot2phot
 ** DONE ~photometry_profile~
@@ -245,7 +263,4 @@ CLOSED: [2020-03-31 Tue 16:13]
 CLOSED: [2020-03-31 Tue 16:13]
 ** DONE concatenate
 CLOSED: [2020-03-31 Tue 16:13]
-* DONE uconvert (Unit conversion) [1/1]
-** DONE ~Jy_per_pix_to_MJy_per_sr~
-CLOSED: [2020-03-31 Tue 15:09]
 

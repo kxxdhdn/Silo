@@ -1,7 +1,7 @@
 Metadata-Version: 1.2
 Name: astylo
-Version: 0.2.1
-Summary: Python tool kit based on astropy, etc.
+Version: 0.3
+Summary: Python tool kit based on astropy, h5py, etc.
 Home-page: https://github.com/kxxdhdn/astylo
 Author: D. HU
 Author-email: dangning.hu@cea.fr
