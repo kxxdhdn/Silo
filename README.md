@@ -1,5 +1,5 @@
-# astylo is now laputan
+# astylo is now rapyuta
 
-This package has been renamed. Use `pip install laputan` instead.
+This package has been renamed. Use `pip install rapyuta --upgrade` instead.
 
-New package: https://pypi.org/project/laputan/
+New package: https://pypi.org/project/rapyuta/
